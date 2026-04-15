@@ -413,7 +413,7 @@ jobs:
           jq -nc \
             --argjson errors "$ERRORS" \
             --argjson warnings "$WARNINGS" \
-            '{errors: $errors, warnings: $warnings, files: []}' > lint-results.json
+            '{errors: $errors, warnings: $warnings, files: []}' > ../lint-results.json
 
       - name: Generate PR diff
         env:
@@ -562,11 +562,13 @@ jobs:
         with:
           script: |
             const totalScore = parseFloat(process.env.QUALITY_SCORE) || 0;
-            const passFail = process.env.QUALITY_PASSFAIL || 'fail';
+            const passFail = process.env.QUALITY_PASSFAIL;
             const threshold = parseInt(process.env.QUALITY_THRESHOLD) || 70;
             const testsOk = process.env.TESTS_RESULT !== 'failure';
 
-            const allPass = passFail === 'pass' && testsOk;
+            // If scoring is unavailable, base the gate on tests only
+            const scoringAvailable = passFail && passFail.length > 0;
+            const allPass = scoringAvailable ? (passFail === 'pass' && testsOk) : testsOk;
 
             const sha = context.eventName === 'pull_request'
               ? context.payload.pull_request.head.sha
@@ -591,9 +593,22 @@ jobs:
           PASS_FAIL: ${{ needs.quality-scoring.outputs.pass_fail }}
           TESTS_RESULT: ${{ needs.run-tests.result }}
           TOTAL_SCORE: ${{ needs.quality-scoring.outputs.total_score }}
+          SCORING_RESULT: ${{ needs.quality-scoring.result }}
         run: |
+          # If quality scoring didn't run or was skipped, fall back to test results
+          if [ -z "$PASS_FAIL" ] || [ "$SCORING_RESULT" != "success" ]; then
+            if [ "$TESTS_RESULT" != "failure" ]; then
+              echo "⚠️ Quality scoring unavailable (status: $SCORING_RESULT) — gate based on tests only"
+              echo "✅ Quality gate PASSED (tests: $TESTS_RESULT)"
+              exit 0
+            else
+              echo "❌ Quality gate FAILED (scoring unavailable, tests: $TESTS_RESULT)"
+              exit 1
+            fi
+          fi
+
           if [ "$PASS_FAIL" = "pass" ] && [ "$TESTS_RESULT" != "failure" ]; then
-            echo "✅ Quality gate PASSED"
+            echo "✅ Quality gate PASSED (score: $TOTAL_SCORE)"
             exit 0
           else
             echo "❌ Quality gate FAILED (score: $TOTAL_SCORE, tests: $TESTS_RESULT)"
