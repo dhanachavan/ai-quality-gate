@@ -65,12 +65,13 @@ cd ../frontend && npm install
 
 ### 2. Configure repository secrets
 
-In your GitHub repo, go to **Settings → Secrets and variables → Actions** and add:
+In your GitHub repo, go to **Settings → Secrets and variables → Actions → New repository secret** and add:
 
-| Secret | Purpose |
-|---|---|
-| `GITHUB_TOKEN` | Provided automatically by GitHub Actions |
-| `ANTHROPIC_API_KEY` | Required for Claude Code test generation |
+| Secret | Purpose | How to get it |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Required for Claude Code test generation | [Anthropic Console](https://console.anthropic.com/) |
+
+> **Note:** `GITHUB_TOKEN` is provided automatically by GitHub Actions on every workflow run — you do **not** need to create it as a secret.
 
 ### 3. Enable Copilot Coding Agent
 
@@ -121,6 +122,41 @@ Go to **Actions → AI Quality Gate → Run workflow** and configure:
 | `score_threshold` | `70` | Minimum quality score to pass (0–100) |
 | `skip_copilot` | `false` | Skip Copilot test generation |
 | `skip_claudecode` | `false` | Skip Claude Code test generation |
+
+---
+
+## Testing the Workflow
+
+### Quick test: Manual dispatch
+
+1. Go to your repo's **Actions** tab
+2. Select **AI Quality Gate** from the left sidebar
+3. Click **Run workflow** → choose the `main` branch
+4. (Optional) Set `skip_claudecode: true` if you haven't added `ANTHROPIC_API_KEY` yet
+5. Click **Run workflow** and watch the jobs execute
+
+### Full test: Open a pull request
+
+```bash
+# Create a feature branch
+git checkout -b test/trigger-workflow
+
+# Make a small change to a tracked file
+echo "// trigger CI" >> api/src/routes/hello.ts
+
+# Commit and push
+git add -A
+git commit -m "test: trigger AI quality gate"
+git push -u origin test/trigger-workflow
+```
+
+Then open a PR from `test/trigger-workflow` → `main` on GitHub. The workflow runs automatically.
+
+### Pre-requisites checklist
+
+- [ ] `ANTHROPIC_API_KEY` added as a repo secret (or skip Claude Code via manual dispatch)
+- [ ] GitHub Copilot enabled for the repo (needed for Copilot Coding Agent)
+- [ ] Actions enabled on the repo (enabled by default for public repos)
 
 ---
 
