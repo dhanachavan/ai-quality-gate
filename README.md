@@ -25,22 +25,39 @@ This project implements a CI/CD quality gate that:
 
 ```
 ai-quality-gate/
-├── api/                          # Express API (TypeScript)
-│   └── src/routes/hello.ts       # Sample API route with tests
-├── frontend/                     # React frontend (TypeScript)
-│   └── src/components/           # Greeting, UserCard components with tests
-├── .github/
-│   ├── agents/                   # AI agent definitions
-│   │   ├── test-generator-copilot.agent.md
-│   │   ├── test-generator-claudecode.agent.md
-│   │   ├── quality-scorer.agent.md
-│   │   └── pr-commenter.agent.md
-│   ├── quality-rubric.yml         # 7-category scoring rubric
-│   ├── scripts/
-│   │   └── quality_score.ts      # Scoring engine
-│   └── workflows/
-│       └── ai-unit-tests-and-quality.yml
-└── package.json                  # Monorepo workspace root
+├── package.json                    # Monorepo root (npm workspaces: api, frontend)
+├── README.md
+│
+├── api/                            # Express API (TypeScript)
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/routes/
+│       ├── hello.ts                # Sample API route
+│       └── hello.test.ts           # Tests for the route
+│
+├── frontend/                       # React frontend (TypeScript)
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vitest.config.ts
+│   └── src/
+│       ├── test-setup.ts
+│       └── components/
+│           ├── Greeting.tsx         # React component
+│           ├── Greeting.test.tsx    # Tests
+│           ├── UserCard.tsx         # React component
+│           └── UserCard.test.tsx    # Tests
+│
+└── .github/
+    ├── agents/                     # 4 AI agent definitions
+    │   ├── test-generator-copilot.agent.md
+    │   ├── test-generator-claudecode.agent.md
+    │   ├── quality-scorer.agent.md
+    │   └── pr-commenter.agent.md
+    ├── quality-rubric.yml          # 7-category scoring rubric
+    ├── scripts/
+    │   └── quality_score.ts        # Scoring engine
+    └── workflows/
+        └── ai-unit-tests-and-quality.yml  # CI workflow
 ```
 
 ---
