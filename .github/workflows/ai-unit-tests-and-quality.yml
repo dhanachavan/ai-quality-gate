@@ -279,6 +279,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Copy generated tests into workspace directories
+        run: |
+          for tool in copilot claudecode; do
+            DIR="__generated_tests__/${tool}"
+            [ -d "$DIR" ] || continue
+
+            # Copy API tests
+            if [ -d "$DIR/api" ]; then
+              cp -r "$DIR/api/". api/ 2>/dev/null || true
+              echo "Copied $tool API tests into api/"
+            fi
+
+            # Copy frontend tests
+            if [ -d "$DIR/frontend" ]; then
+              cp -r "$DIR/frontend/". frontend/ 2>/dev/null || true
+              echo "Copied $tool frontend tests into frontend/"
+            fi
+          done
+
       - name: Run API tests (existing + generated)
         id: api-tests
         if: needs.detect-changes.outputs.has_api_changes == 'true'

@@ -403,19 +403,27 @@ function main(): void {
       0,
     );
 
-    const resultPath = resolve(testResultsDir, tool, "test-results.json");
-    const results = readJsonSafe<{
-      passed?: number;
-      failed?: number;
-    }>(resultPath, {});
-
     toolResults.push({
       tool,
       testsGenerated: testCount,
-      testsPassed: results.passed ?? testCount,
-      testsFailed: results.failed ?? 0,
+      testsPassed: 0,
+      testsFailed: 0,
       coverageDelta: null,
     });
+  }
+
+  // Read combined test results from vitest output files
+  for (const resultFile of ["test-results-api.json", "test-results-frontend.json"]) {
+    const resultPath = resolve(REPO_ROOT, resultFile);
+    const results = readJsonSafe<{
+      numPassedTests?: number;
+      numFailedTests?: number;
+    }>(resultPath, {});
+    // Distribute pass/fail counts across tools (combined run)
+    for (const tr of toolResults) {
+      tr.testsPassed += results.numPassedTests ?? 0;
+      tr.testsFailed += results.numFailedTests ?? 0;
+    }
   }
 
   // Lint results
