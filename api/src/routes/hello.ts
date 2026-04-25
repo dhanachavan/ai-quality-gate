@@ -6,6 +6,10 @@ router.get("/hello", (_req: Request, res: Response) => {
   res.json({ message: "Hello, world!" });
 });
 
+router.get("/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok", uptime: process.uptime() });
+});
+
 router.get("/hello/:name", (req: Request, res: Response) => {
   const name = req.params.name;
   if (!name || name.length > 100) {
